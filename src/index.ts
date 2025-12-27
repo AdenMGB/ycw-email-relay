@@ -62,6 +62,38 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction): void => 
     return;
   }
 
+  // Handle JSON parsing errors
+  if (err instanceof SyntaxError && 'body' in err) {
+    logger.warn('JSON parsing error', {
+      error: err.message,
+      path: req.path,
+    });
+
+    res.status(400).json({
+      success: false,
+      error: 'Invalid JSON in request body',
+      code: 'INVALID_JSON',
+      details: err.message,
+    });
+    return;
+  }
+
+  // Handle JSON parsing errors
+  if (err instanceof SyntaxError && err.message.includes('JSON')) {
+    logger.warn('JSON parsing error', {
+      error: err.message,
+      path: req.path,
+    });
+
+    res.status(400).json({
+      success: false,
+      error: 'Invalid JSON in request body',
+      code: 'INVALID_JSON',
+      details: err.message,
+    });
+    return;
+  }
+
   logger.error('Unhandled error', {
     error: err.message,
     stack: err.stack,

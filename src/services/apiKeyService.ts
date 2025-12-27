@@ -78,7 +78,23 @@ export class ApiKeyService {
     
     for (const keyData of allKeys) {
       try {
+        if (!keyData.key_hash) {
+          logger.warn('API key missing key_hash', { client_id: keyData.client_id, id: keyData.id });
+          continue;
+        }
+        
+        logger.debug('Comparing API key hash', { 
+          client_id: keyData.client_id,
+          hashPrefix: keyData.key_hash.substring(0, 20) + '...'
+        });
+        
         const isValid = await bcrypt.compare(apiKey, keyData.key_hash);
+        
+        logger.debug('Hash comparison result', { 
+          client_id: keyData.client_id,
+          isValid 
+        });
+        
         if (isValid) {
           logger.debug('API key hash match found', { client_id: keyData.client_id });
           
@@ -106,8 +122,12 @@ export class ApiKeyService {
             apiKeyData: keyData,
           };
         }
-      } catch (error) {
-        logger.error('Error comparing API key hash', { error, client_id: keyData.client_id });
+      } catch (error: any) {
+        logger.error('Error comparing API key hash', { 
+          error: error.message,
+          stack: error.stack,
+          client_id: keyData.client_id 
+        });
       }
     }
 
