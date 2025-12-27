@@ -348,6 +348,48 @@ email-service/
 - Helmet.js for security headers
 - SQL injection protection via parameterized queries
 
+## Troubleshooting
+
+### better-sqlite3 native module errors
+
+If you see errors about `better_sqlite3.node` not being found (common on Linux/ARM64):
+
+1. **Install build dependencies:**
+   ```bash
+   sudo apt update
+   sudo apt install -y build-essential python3
+   ```
+
+2. **Rebuild better-sqlite3:**
+   ```bash
+   pnpm rebuild-sqlite
+   # Or manually:
+   npm rebuild better-sqlite3
+   ```
+
+3. **If rebuilding doesn't work, reinstall:**
+   ```bash
+   rm -rf node_modules
+   pnpm install
+   ```
+
+### Database errors
+- Ensure the `database/` directory exists and is writable
+- Run `pnpm migrate` to initialize the schema
+- If you see "database is locked" errors, ensure no other process is accessing the database
+
+### Email sending fails
+- Verify your mail server configuration in `.env`
+- Check that your SMTP credentials are correct
+- For SendGrid, ensure your API key is valid
+- Check application logs for detailed error messages
+- Test SMTP connection: `telnet <smtp-host> <smtp-port>`
+
+### API key validation fails
+- Ensure you're using the full API key (starts with `yk_live_`)
+- Check that the API key hasn't been revoked
+- Verify the API key hasn't expired
+
 ## License
 
 Private - YCW Adelaide
