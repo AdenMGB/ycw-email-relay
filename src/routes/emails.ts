@@ -20,7 +20,7 @@ router.use(rateLimiter);
 // Send single email
 router.post('/send', validateSendEmail, async (req: Request, res: Response, next): Promise<void> => {
   try {
-    const { to, from, subject, html, text, reply_to, template_id } = req.body;
+    const { to, from, subject, html, text, reply_to, cc, bcc, template_id } = req.body;
     const apiKeyId = req.apiKeyData?.id;
 
     // TODO: Handle template rendering if template_id is provided
@@ -42,6 +42,8 @@ router.post('/send', validateSendEmail, async (req: Request, res: Response, next
         html,
         text,
         reply_to,
+        cc,
+        bcc,
       },
       apiKeyId
     );

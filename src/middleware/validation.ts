@@ -2,26 +2,46 @@ import type { Request, Response, NextFunction } from 'express';
 import validator from 'validator';
 import { ValidationError } from '../utils/errors.js';
 
-export function validateEmail(req: Request, _res: Response, next: NextFunction): void {
-  const { to, from } = req.body;
+function validateEmailAddress(email: string | string[], fieldName: string): void {
+  if (Array.isArray(email)) {
+    for (const addr of email) {
+      if (!validator.isEmail(addr)) {
+        throw new ValidationError(`Invalid email address in "${fieldName}": ${addr}`);
+      }
+    }
+  } else {
+    if (!validator.isEmail(email)) {
+      throw new ValidationError(`Invalid "${fieldName}" email address: ${email}`);
+    }
+  }
+}
 
-  if (!to || !validator.isEmail(to)) {
-    throw new ValidationError('Invalid or missing "to" email address');
+export function validateEmail(req: Request, _res: Response, next: NextFunction): void {
+  const { to, from, cc, bcc } = req.body;
+
+  if (!to) {
+    throw new ValidationError('Missing required field: "to"');
   }
 
-  if (from && !validator.isEmail(from)) {
-    throw new ValidationError('Invalid "from" email address');
+  validateEmailAddress(to, 'to');
+
+  if (from) {
+    validateEmailAddress(from, 'from');
+  }
+
+  if (cc) {
+    validateEmailAddress(cc, 'cc');
+  }
+
+  if (bcc) {
+    validateEmailAddress(bcc, 'bcc');
   }
 
   next();
 }
 
 export function validateSendEmail(req: Request, res: Response, next: NextFunction): void {
-  const { to, subject, html, text, template_id } = req.body;
-
-  if (!to) {
-    throw new ValidationError('Missing required field: "to"');
-  }
+  const { subject, html, text, template_id } = req.body;
 
   if (!subject) {
     throw new ValidationError('Missing required field: "subject"');
