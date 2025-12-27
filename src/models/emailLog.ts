@@ -1,5 +1,4 @@
-import { getDatabase } from '../database/db.js';
-import type Database from 'better-sqlite3';
+import { getEmailLogsStorage } from '../database/jsonStorage.js';
 
 export type EmailStatus = 'pending' | 'sent' | 'failed' | 'bounced';
 
@@ -37,85 +36,71 @@ export interface EmailLogQuery {
 }
 
 export class EmailLogModel {
-  private db: Database.Database;
-
-  constructor() {
-    this.db = getDatabase();
-  }
+  private storage = getEmailLogsStorage();
 
   create(data: CreateEmailLogData): EmailLog {
-    const stmt = this.db.prepare(`
-      INSERT INTO email_logs (api_key_id, to_email, from_email, subject, template_id, status, error_message, message_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    const emailLog: EmailLog = this.storage.create({
+      api_key_id: data.api_key_id || null,
+      to_email: data.to_email,
+      from_email: data.from_email,
+      subject: data.subject,
+      template_id: data.template_id || null,
+      status: data.status,
+      error_message: data.error_message || null,
+      message_id: data.message_id || null,
+      sent_at: null,
+    } as any);
 
-    const result = stmt.run(
-      data.api_key_id || null,
-      data.to_email,
-      data.from_email,
-      data.subject,
-      data.template_id || null,
-      data.status,
-      data.error_message || null,
-      data.message_id || null
-    );
-
-    return this.findById(result.lastInsertRowid as number)!;
+    return emailLog;
   }
 
   findById(id: number): EmailLog | null {
-    const stmt = this.db.prepare('SELECT * FROM email_logs WHERE id = ?');
-    return stmt.get(id) as EmailLog | null;
+    return this.storage.findById(id) as EmailLog | null;
   }
 
   findByMessageId(messageId: string): EmailLog | null {
-    const stmt = this.db.prepare('SELECT * FROM email_logs WHERE message_id = ?');
-    return stmt.get(messageId) as EmailLog | null;
+    return this.storage.findBy('message_id', messageId) as EmailLog | null;
   }
 
   updateStatus(id: number, status: EmailStatus, errorMessage?: string | null, messageId?: string | null): void {
-    const stmt = this.db.prepare(`
-      UPDATE email_logs 
-      SET status = ?, error_message = ?, message_id = ?, sent_at = CASE WHEN ? = 'sent' THEN CURRENT_TIMESTAMP ELSE sent_at END
-      WHERE id = ?
-    `);
-    stmt.run(status, errorMessage || null, messageId || null, status, id);
+    const updates: any = {
+      status,
+      error_message: errorMessage || null,
+      message_id: messageId || null,
+    };
+
+    if (status === 'sent') {
+      updates.sent_at = new Date().toISOString();
+    }
+
+    this.storage.update(id, updates);
   }
 
   query(query: EmailLogQuery): { logs: EmailLog[]; total: number } {
-    let whereClause = 'WHERE 1=1';
-    const params: any[] = [];
+    const filter = (log: EmailLog) => {
+      if (query.status && log.status !== query.status) {
+        return false;
+      }
+      if (query.from_date && log.created_at < query.from_date) {
+        return false;
+      }
+      if (query.to_date && log.created_at > query.to_date) {
+        return false;
+      }
+      return true;
+    };
 
-    if (query.status) {
-      whereClause += ' AND status = ?';
-      params.push(query.status);
-    }
+    const sort = (a: EmailLog, b: EmailLog) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 
-    if (query.from_date) {
-      whereClause += ' AND created_at >= ?';
-      params.push(query.from_date);
-    }
-
-    if (query.to_date) {
-      whereClause += ' AND created_at <= ?';
-      params.push(query.to_date);
-    }
-
-    const limit = query.limit || 50;
-    const offset = query.offset || 0;
-
-    const countStmt = this.db.prepare(`SELECT COUNT(*) as count FROM email_logs ${whereClause}`);
-    const total = (countStmt.get(...params) as { count: number }).count;
-
-    const selectStmt = this.db.prepare(`
-      SELECT * FROM email_logs 
-      ${whereClause}
-      ORDER BY created_at DESC 
-      LIMIT ? OFFSET ?
-    `);
-    const logs = selectStmt.all(...params, limit, offset) as EmailLog[];
+    const total = this.storage.count(filter);
+    const logs = this.storage.query(
+      filter,
+      sort,
+      query.limit || 50,
+      query.offset || 0
+    ) as EmailLog[];
 
     return { logs, total };
   }
 }
-

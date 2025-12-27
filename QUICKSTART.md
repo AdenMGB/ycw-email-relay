@@ -15,11 +15,13 @@
    # Edit .env with your configuration
    ```
 
-3. **Initialize database:**
+3. **Initialize storage:**
 
    ```bash
    pnpm migrate
    ```
+
+   This creates the JSON storage files in the `database/` directory.
 
 4. **Build the project:**
 
@@ -119,10 +121,13 @@ See the main [README.md](README.md) for detailed deployment instructions includi
 
 ## Troubleshooting
 
-### Database errors
+### Storage errors
 
 - Ensure the `database/` directory exists and is writable
-- Run `pnpm migrate` to initialize the schema
+- Run `pnpm migrate` to initialize the storage files
+- Check file permissions on the `database/` directory
+- Ensure sufficient disk space is available
+- Storage files are created as `database/api_keys.json` and `database/email_logs.json`
 
 ### Email sending fails
 

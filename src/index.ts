@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import { config } from './config/config.js';
-import { initializeDatabase } from './database/db.js';
+import { initializeStorage } from './database/jsonStorage.js';
 import { logger } from './utils/logger.js';
 import { AppError } from './utils/errors.js';
 import healthRouter from './routes/health.js';
@@ -10,8 +10,8 @@ import apiRouter from './routes/api.js';
 
 const app = express();
 
-// Initialize database
-initializeDatabase();
+// Initialize storage
+initializeStorage();
 
 // Middleware
 app.use(helmet());

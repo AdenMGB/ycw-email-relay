@@ -8,7 +8,7 @@ export const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   database: {
-    path: process.env.DATABASE_PATH || './database/email-service.db',
+    path: process.env.DATABASE_PATH || './database',
   },
   smtp: {
     host: process.env.SMTP_HOST || 'localhost',

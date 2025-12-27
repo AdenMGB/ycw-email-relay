@@ -17,6 +17,7 @@ build/
 database/*.db
 database/*.db-shm
 database/*.db-wal
+database/*.json
 *.sqlite
 *.sqlite3
 

@@ -1,5 +1,4 @@
-import { getDatabase } from '../database/db.js';
-import type Database from 'better-sqlite3';
+import { getApiKeysStorage } from '../database/jsonStorage.js';
 
 export interface ApiKey {
   id: number;
@@ -36,61 +35,57 @@ export interface ApiKeyPublic {
 }
 
 export class ApiKeyModel {
-  private db: Database.Database;
-
-  constructor() {
-    this.db = getDatabase();
-  }
+  private storage = getApiKeysStorage();
 
   create(data: CreateApiKeyData): ApiKey {
     const permissionsJson = data.permissions ? JSON.stringify(data.permissions) : null;
     
-    const stmt = this.db.prepare(`
-      INSERT INTO api_keys (key_hash, name, client_id, permissions, rate_limit, expires_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
+    const apiKey: ApiKey = this.storage.create({
+      key_hash: data.key_hash,
+      name: data.name,
+      client_id: data.client_id,
+      permissions: permissionsJson,
+      rate_limit: data.rate_limit || 100,
+      expires_at: data.expires_at || null,
+      is_active: true,
+      last_used_at: null,
+    } as any);
 
-    const result = stmt.run(
-      data.key_hash,
-      data.name,
-      data.client_id,
-      permissionsJson,
-      data.rate_limit || 100,
-      data.expires_at || null
-    );
-
-    return this.findById(result.lastInsertRowid as number)!;
+    return apiKey;
   }
 
   findByKeyHash(keyHash: string): ApiKey | null {
-    const stmt = this.db.prepare('SELECT * FROM api_keys WHERE key_hash = ?');
-    return stmt.get(keyHash) as ApiKey | null;
+    return this.storage.findBy('key_hash', keyHash) as ApiKey | null;
   }
 
   findByClientId(clientId: string): ApiKey | null {
-    const stmt = this.db.prepare('SELECT * FROM api_keys WHERE client_id = ?');
-    return stmt.get(clientId) as ApiKey | null;
+    return this.storage.findBy('client_id', clientId) as ApiKey | null;
   }
 
   findById(id: number): ApiKey | null {
-    const stmt = this.db.prepare('SELECT * FROM api_keys WHERE id = ?');
-    return stmt.get(id) as ApiKey | null;
+    return this.storage.findById(id) as ApiKey | null;
   }
 
   findAll(): ApiKey[] {
-    const stmt = this.db.prepare('SELECT * FROM api_keys ORDER BY created_at DESC');
-    return stmt.all() as ApiKey[];
+    return this.storage.findAll().sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    ) as ApiKey[];
   }
 
   updateLastUsed(id: number): void {
-    const stmt = this.db.prepare('UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?');
-    stmt.run(id);
+    this.storage.update(id, {
+      last_used_at: new Date().toISOString(),
+    } as any);
   }
 
   revoke(clientId: string): boolean {
-    const stmt = this.db.prepare('UPDATE api_keys SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE client_id = ?');
-    const result = stmt.run(clientId);
-    return result.changes > 0;
+    const apiKey = this.findByClientId(clientId);
+    if (!apiKey) {
+      return false;
+    }
+    return this.storage.update(apiKey.id, {
+      is_active: false,
+    } as any);
   }
 
   toPublic(apiKey: ApiKey): ApiKeyPublic {
@@ -106,4 +101,3 @@ export class ApiKeyModel {
     };
   }
 }
-

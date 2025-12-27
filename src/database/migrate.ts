@@ -1,12 +1,11 @@
-import { initializeDatabase } from './db.js';
+import { initializeStorage } from './jsonStorage.js';
 import { logger } from '../utils/logger.js';
 
 try {
-  initializeDatabase();
-  logger.info('Database migration completed successfully');
+  initializeStorage();
+  logger.info('Storage initialization completed successfully');
   process.exit(0);
 } catch (error) {
-  logger.error('Database migration failed', { error });
+  logger.error('Storage initialization failed', { error });
   process.exit(1);
 }
-

@@ -8,7 +8,7 @@ A standalone email service application that runs on a VPS with a mailserver, pro
 - 📧 Email sending (single and bulk)
 - 📊 Email logging and status tracking
 - ⚡ Rate limiting per API key
-- 🗄️ SQLite database (simple and lightweight)
+- 🗄️ JSON file storage (simple and lightweight, no database server required)
 - 🔒 Security best practices (Helmet, CORS, input validation)
 - 📝 Comprehensive logging
 
@@ -17,7 +17,7 @@ A standalone email service application that runs on a VPS with a mailserver, pro
 - **Runtime:** Node.js 18+
 - **Framework:** Express.js 4.x
 - **Language:** TypeScript
-- **Database:** SQLite (better-sqlite3)
+- **Database:** JSON file storage (no database server required)
 - **Email:** Nodemailer (supports Postfix, SendGrid, Mailgun, AWS SES)
 
 ## Quick Start
@@ -47,7 +47,7 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-4. Initialize the database:
+4. Initialize the storage:
 ```bash
 pnpm migrate
 ```
@@ -74,7 +74,7 @@ pnpm dev
 See `.env.example` for all available configuration options. Key variables:
 
 - `PORT`: Server port (default: 3000)
-- `DATABASE_PATH`: Path to SQLite database file
+- `DATABASE_PATH`: Path to database directory (default: `./database`)
 - `SMTP_HOST`: SMTP server hostname
 - `SMTP_PORT`: SMTP server port
 - `DEFAULT_FROM_EMAIL`: Default sender email address
@@ -310,9 +310,8 @@ email-service/
 │   ├── config/
 │   │   └── config.ts            # Configuration management
 │   ├── database/
-│   │   ├── db.ts                # Database connection
-│   │   ├── schema.sql           # Database schema
-│   │   └── migrate.ts           # Migration script
+│   │   ├── jsonStorage.ts       # JSON file storage system
+│   │   └── migrate.ts           # Storage initialization script
 │   ├── models/
 │   │   ├── apiKey.ts            # API key model
 │   │   └── emailLog.ts          # Email log model
@@ -350,33 +349,12 @@ email-service/
 
 ## Troubleshooting
 
-### better-sqlite3 native module errors
 
-If you see errors about `better_sqlite3.node` not being found (common on Linux/ARM64):
-
-1. **Install build dependencies:**
-   ```bash
-   sudo apt update
-   sudo apt install -y build-essential python3
-   ```
-
-2. **Rebuild better-sqlite3:**
-   ```bash
-   pnpm rebuild-sqlite
-   # Or manually:
-   npm rebuild better-sqlite3
-   ```
-
-3. **If rebuilding doesn't work, reinstall:**
-   ```bash
-   rm -rf node_modules
-   pnpm install
-   ```
-
-### Database errors
+### Storage errors
 - Ensure the `database/` directory exists and is writable
-- Run `pnpm migrate` to initialize the schema
-- If you see "database is locked" errors, ensure no other process is accessing the database
+- Run `pnpm migrate` to initialize the storage files
+- Check file permissions on the `database/` directory
+- Ensure sufficient disk space is available
 
 ### Email sending fails
 - Verify your mail server configuration in `.env`
