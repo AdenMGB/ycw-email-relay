@@ -26,11 +26,12 @@ router.post('/send', validateSendEmail, async (req: Request, res: Response, next
     // TODO: Handle template rendering if template_id is provided
     if (template_id) {
       // For now, return error if template is requested but not implemented
-      return res.status(501).json({
+      res.status(501).json({
         success: false,
         error: 'Template rendering not yet implemented',
         code: 'NOT_IMPLEMENTED',
       });
+      return;
     }
 
     const result = await emailService.sendEmail(

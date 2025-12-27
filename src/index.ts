@@ -54,11 +54,12 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction): void => 
       path: req.path,
     });
 
-    return res.status(err.statusCode).json({
+    res.status(err.statusCode).json({
       success: false,
       error: err.message,
       code: err.code,
     });
+    return;
   }
 
   logger.error('Unhandled error', {
