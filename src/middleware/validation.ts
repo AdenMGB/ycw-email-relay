@@ -1,15 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
-import { isEmail } from 'validator';
+import validator from 'validator';
 import { ValidationError } from '../utils/errors.js';
 
 export function validateEmail(req: Request, _res: Response, next: NextFunction): void {
   const { to, from } = req.body;
 
-  if (!to || !isEmail(to)) {
+  if (!to || !validator.isEmail(to)) {
     throw new ValidationError('Invalid or missing "to" email address');
   }
 
-  if (from && !isEmail(from)) {
+  if (from && !validator.isEmail(from)) {
     throw new ValidationError('Invalid "from" email address');
   }
 
@@ -55,12 +55,12 @@ export function validateBulkEmail(req: Request, _res: Response, next: NextFuncti
 
   // Validate all recipient emails
   for (const recipient of recipients) {
-    if (!isEmail(recipient)) {
+    if (!validator.isEmail(recipient)) {
       throw new ValidationError(`Invalid email address in recipients: ${recipient}`);
     }
   }
 
-  if (req.body.from && !isEmail(req.body.from)) {
+  if (req.body.from && !validator.isEmail(req.body.from)) {
     throw new ValidationError('Invalid "from" email address');
   }
 
