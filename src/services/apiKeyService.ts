@@ -1,4 +1,4 @@
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
 import { ApiKeyModel, type CreateApiKeyData } from '../models/apiKey.js';
 import { logger } from '../utils/logger.js';

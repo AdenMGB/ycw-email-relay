@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { isEmail } from 'validator';
 import { ValidationError } from '../utils/errors.js';
 
-export function validateEmail(req: Request, res: Response, next: NextFunction): void {
+export function validateEmail(req: Request, _res: Response, next: NextFunction): void {
   const { to, from } = req.body;
 
   if (!to || !isEmail(to)) {
@@ -38,7 +38,7 @@ export function validateSendEmail(req: Request, res: Response, next: NextFunctio
   validateEmail(req, res, next);
 }
 
-export function validateBulkEmail(req: Request, res: Response, next: NextFunction): void {
+export function validateBulkEmail(req: Request, _res: Response, next: NextFunction): void {
   const { recipients, subject, html, text } = req.body;
 
   if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
@@ -67,7 +67,7 @@ export function validateBulkEmail(req: Request, res: Response, next: NextFunctio
   next();
 }
 
-export function validateGenerateApiKey(req: Request, res: Response, next: NextFunction): void {
+export function validateGenerateApiKey(req: Request, _res: Response, next: NextFunction): void {
   const { name } = req.body;
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {

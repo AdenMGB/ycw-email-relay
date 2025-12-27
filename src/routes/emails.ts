@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
-import { Router } from 'express';
+import type { Request, Response, Router } from 'express';
+import { Router as ExpressRouter } from 'express';
 import { EmailService } from '../services/emailService.js';
 import { EmailLogModel } from '../models/emailLog.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -7,7 +7,7 @@ import { validateSendEmail, validateBulkEmail } from '../middleware/validation.j
 import { authenticateApiKey, requirePermission } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimit.js';
 
-const router = Router();
+const router: Router = ExpressRouter();
 const emailService = new EmailService();
 const emailLogModel = new EmailLogModel();
 const rateLimiter = createRateLimiter();
@@ -18,9 +18,9 @@ router.use(requirePermission('send_email'));
 router.use(rateLimiter);
 
 // Send single email
-router.post('/send', validateSendEmail, async (req: Request, res: Response, next) => {
+router.post('/send', validateSendEmail, async (req: Request, res: Response, next): Promise<void> => {
   try {
-    const { to, from, subject, html, text, reply_to, template_id, template_variables } = req.body;
+    const { to, from, subject, html, text, reply_to, template_id } = req.body;
     const apiKeyId = req.apiKeyData?.id;
 
     // TODO: Handle template rendering if template_id is provided

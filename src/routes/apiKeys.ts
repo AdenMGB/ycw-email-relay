@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
-import { Router } from 'express';
+import type { Request, Response, Router } from 'express';
+import { Router as ExpressRouter } from 'express';
 import { ApiKeyService } from '../services/apiKeyService.js';
 import { ApiKeyModel } from '../models/apiKey.js';
 import { NotFoundError } from '../utils/errors.js';
@@ -7,7 +7,7 @@ import { validateGenerateApiKey } from '../middleware/validation.js';
 import { authenticateApiKey, requirePermission } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: Router = ExpressRouter();
 const apiKeyService = new ApiKeyService();
 const apiKeyModel = new ApiKeyModel();
 
@@ -35,7 +35,7 @@ router.post('/generate', validateGenerateApiKey, async (req: Request, res: Respo
 });
 
 // List API keys (requires authentication)
-router.get('/', authenticateApiKey, requirePermission('manage_keys'), async (req: Request, res: Response, next) => {
+router.get('/', authenticateApiKey, requirePermission('manage_keys'), async (_req: Request, res: Response, next) => {
   try {
     const keys = apiKeyModel.findAll();
     const publicKeys = keys.map(key => apiKeyModel.toPublic(key));

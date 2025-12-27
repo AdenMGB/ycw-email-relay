@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { htmlToText } from 'html-to-text';
 import { MailServer } from './mailServer.js';
-import { EmailLogModel, type CreateEmailLogData } from '../models/emailLog.js';
+import { EmailLogModel } from '../models/emailLog.js';
 import { config } from '../config/config.js';
 import { logger } from '../utils/logger.js';
 

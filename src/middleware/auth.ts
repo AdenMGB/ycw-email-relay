@@ -14,7 +14,7 @@ const apiKeyService = new ApiKeyService();
 
 export async function authenticateApiKey(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
@@ -40,7 +40,7 @@ export async function authenticateApiKey(
 }
 
 export function requirePermission(permission: string) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.apiKeyData) {
         throw new AuthenticationError('API key not authenticated');

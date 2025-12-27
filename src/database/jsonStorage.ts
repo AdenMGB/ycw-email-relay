@@ -46,14 +46,14 @@ class JsonStorage<T extends { id: number }> {
     }
   }
 
-  create(item: Omit<T, 'id' | 'created_at' | 'updated_at'> & Partial<Pick<T, 'id' | 'created_at' | 'updated_at'>>): T {
+  create(item: Partial<T> & { id?: number }): T {
     const now = new Date().toISOString();
     const newItem = {
       ...item,
       id: item.id || this.nextId++,
       created_at: (item as any).created_at || now,
       updated_at: now,
-    } as T;
+    } as unknown as T;
 
     this.data.push(newItem);
     this.save();
