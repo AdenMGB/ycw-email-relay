@@ -24,7 +24,11 @@ export async function authenticateApiKey(
       throw new AuthenticationError('Missing or invalid Authorization header');
     }
 
-    const apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const apiKey = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
+
+    if (!apiKey) {
+      throw new AuthenticationError('API key is empty');
+    }
 
     const validation = await apiKeyService.validateApiKey(apiKey);
 

@@ -31,38 +31,45 @@ A standalone email service application that runs on a VPS with a mailserver, pro
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd ycw-email-relay
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 4. Initialize the storage:
+
 ```bash
 pnpm migrate
 ```
 
 5. Build the project:
+
 ```bash
 pnpm build
 ```
 
 6. Start the server:
+
 ```bash
 pnpm start
 ```
 
 For development with hot reload:
+
 ```bash
 pnpm dev
 ```
@@ -101,11 +108,13 @@ The service supports multiple mail server options (in priority order):
 Base URL: `http://localhost:3000/api/v1`
 
 ### Health Check
+
 ```
 GET /health
 ```
 
 ### Generate API Key
+
 ```
 POST /api-keys/generate
 Content-Type: application/json
@@ -119,18 +128,21 @@ Content-Type: application/json
 ```
 
 ### List API Keys
+
 ```
 GET /api-keys
 Authorization: Bearer <api_key>
 ```
 
 ### Revoke API Key
+
 ```
 DELETE /api-keys/:client_id
 Authorization: Bearer <api_key>
 ```
 
 ### Send Email
+
 ```
 POST /emails/send
 Authorization: Bearer <api_key>
@@ -147,6 +159,7 @@ Content-Type: application/json
 ```
 
 ### Send Bulk Email
+
 ```
 POST /emails/send-bulk
 Authorization: Bearer <api_key>
@@ -161,12 +174,14 @@ Content-Type: application/json
 ```
 
 ### Get Email Status
+
 ```
 GET /emails/:message_id
 Authorization: Bearer <api_key>
 ```
 
 ### Get Email Logs
+
 ```
 GET /emails/logs?limit=50&offset=0&status=sent
 Authorization: Bearer <api_key>
@@ -177,11 +192,13 @@ Authorization: Bearer <api_key>
 ### Using PM2
 
 1. Install PM2 globally:
+
 ```bash
 npm install -g pm2
 ```
 
 2. Start the application:
+
 ```bash
 pm2 start dist/index.js --name email-service
 pm2 save
@@ -212,6 +229,7 @@ WantedBy=multi-user.target
 ```
 
 Then:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable email-service
@@ -224,7 +242,7 @@ sudo systemctl start email-service
 server {
     listen 80;
     server_name email.ycwadelaide.adenmgb.com;
-    
+
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -252,36 +270,38 @@ Add the email service API key to your Cloudflare Workers environment variables:
 
 ```typescript
 // In your Cloudflare Worker
-const EMAIL_SERVICE_URL = 'https://email.ycwadelaide.adenmgb.com/api/v1';
-const EMAIL_SERVICE_API_KEY = env.EMAIL_SERVICE_API_KEY;
+const EMAIL_SERVICE_URL = 'https://email.ycwadelaide.adenmgb.com/api/v1'
+const EMAIL_SERVICE_API_KEY = env.EMAIL_SERVICE_API_KEY
 
 async function sendEmail(to: string, subject: string, html: string) {
   const response = await fetch(`${EMAIL_SERVICE_URL}/emails/send`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${EMAIL_SERVICE_API_KEY}`
+      Authorization: `Bearer ${EMAIL_SERVICE_API_KEY}`,
     },
     body: JSON.stringify({
       to,
       from: 'noreply@ycwadelaide.adenmgb.com',
       subject,
-      html
-    })
-  });
-  
-  return await response.json();
+      html,
+    }),
+  })
+
+  return await response.json()
 }
 ```
 
 ## Testing
 
 ### Health Check
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 ### Generate API Key
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/api-keys/generate \
   -H "Content-Type: application/json" \
@@ -289,6 +309,7 @@ curl -X POST http://localhost:3000/api/v1/api-keys/generate \
 ```
 
 ### Send Email
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/emails/send \
   -H "Authorization: Bearer YOUR_API_KEY" \
@@ -349,14 +370,15 @@ email-service/
 
 ## Troubleshooting
 
-
 ### Storage errors
+
 - Ensure the `database/` directory exists and is writable
 - Run `pnpm migrate` to initialize the storage files
 - Check file permissions on the `database/` directory
 - Ensure sufficient disk space is available
 
 ### Email sending fails
+
 - Verify your mail server configuration in `.env`
 - Check that your SMTP credentials are correct
 - For SendGrid, ensure your API key is valid
@@ -364,6 +386,7 @@ email-service/
 - Test SMTP connection: `telnet <smtp-host> <smtp-port>`
 
 ### API key validation fails
+
 - Ensure you're using the full API key (starts with `yk_live_`)
 - Check that the API key hasn't been revoked
 - Verify the API key hasn't expired

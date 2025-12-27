@@ -71,32 +71,47 @@ export class ApiKeyService {
   async validateApiKey(apiKey: string): Promise<{ valid: boolean; apiKeyData?: any }> {
     const allKeys = this.apiKeyModel.findAll();
     
+    logger.debug('Validating API key', { 
+      keyPrefix: apiKey.substring(0, 10) + '...',
+      totalKeys: allKeys.length 
+    });
+    
     for (const keyData of allKeys) {
-      const isValid = await bcrypt.compare(apiKey, keyData.key_hash);
-      if (isValid) {
-        // Check if key is active
-        if (!keyData.is_active) {
-          return { valid: false };
-        }
-
-        // Check if key is expired
-        if (keyData.expires_at) {
-          const expiresAt = new Date(keyData.expires_at);
-          if (expiresAt < new Date()) {
+      try {
+        const isValid = await bcrypt.compare(apiKey, keyData.key_hash);
+        if (isValid) {
+          logger.debug('API key hash match found', { client_id: keyData.client_id });
+          
+          // Check if key is active
+          if (!keyData.is_active) {
+            logger.warn('API key is inactive', { client_id: keyData.client_id });
             return { valid: false };
           }
+
+          // Check if key is expired
+          if (keyData.expires_at) {
+            const expiresAt = new Date(keyData.expires_at);
+            if (expiresAt < new Date()) {
+              logger.warn('API key has expired', { client_id: keyData.client_id, expires_at: keyData.expires_at });
+              return { valid: false };
+            }
+          }
+
+          // Update last used
+          this.apiKeyModel.updateLastUsed(keyData.id);
+
+          logger.info('API key validated successfully', { client_id: keyData.client_id });
+          return {
+            valid: true,
+            apiKeyData: keyData,
+          };
         }
-
-        // Update last used
-        this.apiKeyModel.updateLastUsed(keyData.id);
-
-        return {
-          valid: true,
-          apiKeyData: keyData,
-        };
+      } catch (error) {
+        logger.error('Error comparing API key hash', { error, client_id: keyData.client_id });
       }
     }
 
+    logger.warn('No matching API key found');
     return { valid: false };
   }
 
