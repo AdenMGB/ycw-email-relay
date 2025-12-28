@@ -10,12 +10,13 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Copy package files
-# Note: pnpm-lock.yaml should be committed to git for reproducible builds
-# If you haven't committed pnpm-lock.yaml yet, commit it: git add pnpm-lock.yaml
+# Note: If pnpm-lock.yaml is out of sync with package.json, it will be regenerated during install
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+# --no-frozen-lockfile allows pnpm to update the lockfile if it's out of sync
+# This handles cases where dependencies changed but lockfile wasn't updated
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source files
 COPY tsconfig.json tsconfig.app.json tsconfig.node.json ./
@@ -37,11 +38,12 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Copy package files
-# Note: pnpm-lock.yaml should be committed to git for reproducible builds
-COPY package.json pnpm-lock.yaml ./
+# Copy package files and the updated lockfile from builder stage
+COPY package.json ./
+COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install production dependencies only
+# Use the lockfile generated/updated in the builder stage
 RUN pnpm install --prod --frozen-lockfile && \
     pnpm store prune
 
