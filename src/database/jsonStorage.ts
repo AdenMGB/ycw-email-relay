@@ -11,14 +11,25 @@ class JsonStorage<T extends { id: number }> {
   constructor(fileName: string) {
     // Use the database path directly as the directory
     this.filePath = join(config.database.path, `${fileName}.json`);
+    logger.info(`Initializing JSON storage for ${fileName}`, {
+      filePath: this.filePath,
+      databasePath: config.database.path
+    });
     this.load();
   }
 
   private load(): void {
     try {
-      if (existsSync(this.filePath)) {
+      const fileExists = existsSync(this.filePath);
+      logger.debug(`Loading JSON storage`, {
+        filePath: this.filePath,
+        exists: fileExists
+      });
+      
+      if (fileExists) {
         const content = readFileSync(this.filePath, 'utf-8');
         this.data = JSON.parse(content);
+        logger.info(`Loaded ${this.data.length} items from ${this.filePath}`);
         // Find the highest ID to set nextId
         if (this.data.length > 0) {
           this.nextId = Math.max(...this.data.map(item => item.id)) + 1;
@@ -27,11 +38,15 @@ class JsonStorage<T extends { id: number }> {
         // Ensure directory exists
         const dbDir = dirname(this.filePath);
         mkdirSync(dbDir, { recursive: true });
+        logger.info(`Created new storage file at ${this.filePath}`);
         this.data = [];
         this.save();
       }
-    } catch (error) {
-      logger.error(`Error loading JSON storage from ${this.filePath}`, { error });
+    } catch (error: any) {
+      logger.error(`Error loading JSON storage from ${this.filePath}`, { 
+        error: error.message,
+        stack: error.stack
+      });
       this.data = [];
       this.save();
     }
@@ -65,6 +80,9 @@ class JsonStorage<T extends { id: number }> {
   }
 
   findAll(): T[] {
+    logger.debug(`findAll() called, returning ${this.data.length} items`, {
+      filePath: this.filePath
+    });
     return [...this.data];
   }
 
@@ -125,14 +143,30 @@ class JsonStorage<T extends { id: number }> {
     }
     return this.data.length;
   }
+
+  // Reload data from disk (useful if file was modified externally)
+  reload(): void {
+    logger.info(`Reloading storage from ${this.filePath}`);
+    this.load();
+  }
 }
 
-export function getApiKeysStorage() {
-  return new JsonStorage<any>('api_keys');
+// Singleton instances to ensure data consistency
+let apiKeysStorageInstance: JsonStorage<any> | null = null;
+let emailLogsStorageInstance: JsonStorage<any> | null = null;
+
+export function getApiKeysStorage(): JsonStorage<any> {
+  if (!apiKeysStorageInstance) {
+    apiKeysStorageInstance = new JsonStorage<any>('api_keys');
+  }
+  return apiKeysStorageInstance;
 }
 
-export function getEmailLogsStorage() {
-  return new JsonStorage<any>('email_logs');
+export function getEmailLogsStorage(): JsonStorage<any> {
+  if (!emailLogsStorageInstance) {
+    emailLogsStorageInstance = new JsonStorage<any>('email_logs');
+  }
+  return emailLogsStorageInstance;
 }
 
 export function initializeStorage(): void {
