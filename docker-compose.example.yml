@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  email-relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ycw-email-relay
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/app/database
+      # SMTP Configuration
+      - SMTP_HOST=${SMTP_HOST:-localhost}
+      - SMTP_PORT=${SMTP_PORT:-25}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      # SendGrid (optional)
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+      # Mailgun (optional)
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY:-}
+      - MAILGUN_DOMAIN=${MAILGUN_DOMAIN:-}
+      # AWS SES (optional)
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY:-}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      # Security
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - API_KEY_SECRET=${API_KEY_SECRET:-change-me-in-production}
+      # Email defaults
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-noreply@ycwadelaide.adenmgb.com}
+      - DEFAULT_FROM_NAME=${DEFAULT_FROM_NAME:-YCW Adelaide}
+      # CORS
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      # Rate limiting
+      - DEFAULT_RATE_LIMIT=${DEFAULT_RATE_LIMIT:-1000}
+    volumes:
+      # Persist database files
+      - ./database:/app/database
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
