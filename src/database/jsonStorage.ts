@@ -9,8 +9,8 @@ class JsonStorage<T extends { id: number }> {
   private nextId: number = 1;
 
   constructor(fileName: string) {
-    const dbDir = dirname(config.database.path);
-    this.filePath = join(dbDir, `${fileName}.json`);
+    // Use the database path directly as the directory
+    this.filePath = join(config.database.path, `${fileName}.json`);
     this.load();
   }
 
