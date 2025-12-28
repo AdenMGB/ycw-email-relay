@@ -1,10 +1,26 @@
 version: '3.8'
 
+# GitHub Container Registry Authentication:
+# Before using this compose file, authenticate with GitHub Container Registry:
+#   docker login ghcr.io -u YOUR_GITHUB_USERNAME
+#   Enter your GitHub Personal Access Token (PAT) with 'read:packages' permission
+#
+# Or set GITHUB_USERNAME environment variable:
+#   export GITHUB_USERNAME=your-username
+
 services:
   email-relay:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Use GitHub Container Registry image (recommended for production)
+    # Replace 'your-username' with your GitHub username or organization name
+    # To use a specific version, change 'latest' to a tag like 'v1.0.0' or 'main-abc1234'
+    # Example: ghcr.io/your-org/ycw-email-relay:v1.0.0
+    image: ghcr.io/your-username/ycw-email-relay:latest
+    
+    # Alternative: Build from local Dockerfile (uncomment to use)
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    
     container_name: ycw-email-relay
     ports:
       - "3000:3000"
