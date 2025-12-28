@@ -55,6 +55,8 @@ services:
       - DEFAULT_RATE_LIMIT=${DEFAULT_RATE_LIMIT:-1000}
     volumes:
       # Persist database files
+      # Note: The entrypoint script will fix permissions automatically
+      # Ensure the ./database directory exists on the host (or let Docker create it)
       - ./database:/app/database
     restart: unless-stopped
     healthcheck:

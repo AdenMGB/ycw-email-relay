@@ -54,8 +54,23 @@ COPY --from=builder /app/dist ./dist
 RUN mkdir -p /app/database && \
     chown -R nodejs:nodejs /app
 
-# Switch to non-root user
-USER nodejs
+# Create entrypoint script that fixes permissions then runs as nodejs user
+# This handles cases where volume mounts override permissions
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'set -e' >> /app/entrypoint.sh && \
+    echo '# Fix permissions for database directory (needed when using volume mounts)' >> /app/entrypoint.sh && \
+    echo 'mkdir -p /app/database' >> /app/entrypoint.sh && \
+    echo 'chown -R nodejs:nodejs /app/database 2>/dev/null || true' >> /app/entrypoint.sh && \
+    echo 'chmod -R 755 /app/database 2>/dev/null || true' >> /app/entrypoint.sh && \
+    echo '# Switch to nodejs user and run the application' >> /app/entrypoint.sh && \
+    echo 'exec su-exec nodejs sh -c "node dist/database/migrate.js && node dist/index.js"' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+# Install su-exec for switching users
+RUN apk add --no-cache su-exec
+
+# Keep as root for entrypoint script to fix permissions
+# USER nodejs
 
 # Expose port
 EXPOSE 3000
@@ -69,5 +84,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Run migrations and start server
-CMD ["sh", "-c", "node dist/database/migrate.js && node dist/index.js"]
+CMD ["/app/entrypoint.sh"]
 
