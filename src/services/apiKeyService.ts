@@ -44,6 +44,16 @@ export class ApiKeyService {
     // Hash the API key for storage
     const keyHash = await bcrypt.hash(apiKey, 10);
     
+    // Verify the hash works immediately after generation (for debugging)
+    const testCompare = await bcrypt.compare(apiKey, keyHash);
+    if (!testCompare) {
+      logger.error('CRITICAL: Generated API key hash verification failed immediately after generation!', {
+        client_id: clientId,
+        apiKeyPrefix: apiKey.substring(0, 15) + '...',
+        hashPrefix: keyHash.substring(0, 20) + '...'
+      });
+    }
+    
     const data: CreateApiKeyData = {
       key_hash: keyHash,
       name: options.name,
@@ -55,7 +65,13 @@ export class ApiKeyService {
 
     const created = this.apiKeyModel.create(data);
     
-    logger.info('API key generated', { client_id: clientId, name: options.name });
+    logger.info('API key generated', { 
+      client_id: clientId, 
+      name: options.name,
+      apiKeyPrefix: apiKey.substring(0, 15) + '...',
+      apiKeyLength: apiKey.length,
+      hashVerified: testCompare
+    });
 
     return {
       api_key: apiKey,
@@ -96,20 +112,36 @@ export class ApiKeyService {
           continue;
         }
         
+        // Verify hash format
+        if (!keyData.key_hash.startsWith('$2')) {
+          logger.error('Invalid hash format detected', { 
+            client_id: keyData.client_id,
+            hashPrefix: keyData.key_hash.substring(0, 20) + '...',
+            hashLength: keyData.key_hash.length
+          });
+          continue;
+        }
+        
         logger.debug('Comparing API key hash', { 
           client_id: keyData.client_id,
-          hashPrefix: keyData.key_hash.substring(0, 20) + '...'
+          hashPrefix: keyData.key_hash.substring(0, 20) + '...',
+          keyHashLength: keyData.key_hash.length,
+          normalizedKeyLength: normalizedKey.length
         });
         
         const isValid = await bcrypt.compare(normalizedKey, keyData.key_hash);
         
-        logger.debug('Hash comparison result', { 
+        logger.info('Hash comparison result', { 
           client_id: keyData.client_id,
-          isValid 
+          isValid,
+          keyPrefix: normalizedKey.substring(0, 15) + '...',
+          storedHashPrefix: keyData.key_hash.substring(0, 20) + '...',
+          storedHashLength: keyData.key_hash.length,
+          hashFormat: keyData.key_hash.startsWith('$2') ? 'bcrypt' : 'unknown'
         });
         
         if (isValid) {
-          logger.debug('API key hash match found', { client_id: keyData.client_id });
+          logger.info('API key hash match found', { client_id: keyData.client_id });
           
           // Check if key is active
           if (!keyData.is_active) {
