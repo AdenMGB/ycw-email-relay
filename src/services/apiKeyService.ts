@@ -69,10 +69,23 @@ export class ApiKeyService {
   }
 
   async validateApiKey(apiKey: string): Promise<{ valid: boolean; apiKeyData?: any }> {
+    // Normalize the API key - remove any extra whitespace
+    const normalizedKey = apiKey.trim();
+    
+    // Validate API key format
+    if (!normalizedKey.startsWith('yk_live_')) {
+      logger.warn('API key has invalid format', { 
+        keyPrefix: normalizedKey.substring(0, 15) + '...',
+        expectedPrefix: 'yk_live_'
+      });
+      return { valid: false };
+    }
+    
     const allKeys = this.apiKeyModel.findAll();
     
-    logger.debug('Validating API key', { 
-      keyPrefix: apiKey.substring(0, 10) + '...',
+    logger.info('Validating API key', { 
+      keyPrefix: normalizedKey.substring(0, 15) + '...',
+      keyLength: normalizedKey.length,
       totalKeys: allKeys.length 
     });
     
@@ -88,7 +101,7 @@ export class ApiKeyService {
           hashPrefix: keyData.key_hash.substring(0, 20) + '...'
         });
         
-        const isValid = await bcrypt.compare(apiKey, keyData.key_hash);
+        const isValid = await bcrypt.compare(normalizedKey, keyData.key_hash);
         
         logger.debug('Hash comparison result', { 
           client_id: keyData.client_id,
@@ -131,7 +144,11 @@ export class ApiKeyService {
       }
     }
 
-    logger.warn('No matching API key found');
+    logger.warn('No matching API key found', {
+      keyPrefix: normalizedKey.substring(0, 15) + '...',
+      keyLength: normalizedKey.length,
+      totalKeysChecked: allKeys.length
+    });
     return { valid: false };
   }
 

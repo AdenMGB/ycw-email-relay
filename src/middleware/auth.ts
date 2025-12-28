@@ -33,7 +33,11 @@ export async function authenticateApiKey(
     const validation = await apiKeyService.validateApiKey(apiKey);
 
     if (!validation.valid || !validation.apiKeyData) {
-      throw new AuthenticationError('Invalid or expired API key');
+      // Provide more helpful error message
+      const keyPrefix = apiKey.substring(0, Math.min(15, apiKey.length));
+      throw new AuthenticationError(
+        `Invalid or expired API key. Make sure you're using the full API key that starts with 'yk_live_' (received: ${keyPrefix}...)`
+      );
     }
 
     req.apiKeyData = validation.apiKeyData;
