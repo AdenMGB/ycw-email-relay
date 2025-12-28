@@ -10,6 +10,8 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # Copy package files
+# Note: pnpm-lock.yaml should be committed to git for reproducible builds
+# If you haven't committed pnpm-lock.yaml yet, commit it: git add pnpm-lock.yaml
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
@@ -36,6 +38,7 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
 # Copy package files
+# Note: pnpm-lock.yaml should be committed to git for reproducible builds
 COPY package.json pnpm-lock.yaml ./
 
 # Install production dependencies only
