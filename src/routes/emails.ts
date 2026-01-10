@@ -20,7 +20,7 @@ router.use(rateLimiter);
 // Send single email
 router.post('/send', validateSendEmail, async (req: Request, res: Response, next): Promise<void> => {
   try {
-    const { to, from, subject, html, text, reply_to, cc, bcc, template_id } = req.body;
+    const { to, from, from_name, subject, html, text, reply_to, cc, bcc, template_id } = req.body;
     const apiKeyId = req.apiKeyData?.id;
 
     // TODO: Handle template rendering if template_id is provided
@@ -38,6 +38,7 @@ router.post('/send', validateSendEmail, async (req: Request, res: Response, next
       {
         to,
         from,
+        from_name,
         subject,
         html,
         text,
@@ -70,13 +71,14 @@ router.post('/send', validateSendEmail, async (req: Request, res: Response, next
 // Send bulk email
 router.post('/send-bulk', validateBulkEmail, async (req: Request, res: Response, next) => {
   try {
-    const { recipients, from, subject, html, text, reply_to } = req.body;
+    const { recipients, from, from_name, subject, html, text, reply_to } = req.body;
     const apiKeyId = req.apiKeyData?.id;
 
     const result = await emailService.sendBulkEmail(
       {
         recipients,
         from,
+        from_name,
         subject,
         html,
         text,

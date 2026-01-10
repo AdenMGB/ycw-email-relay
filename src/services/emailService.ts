@@ -8,6 +8,7 @@ import { logger } from '../utils/logger.js'
 export interface SendEmailOptions {
   to: string | string[]
   from?: string
+  from_name?: string
   subject: string
   html?: string
   text?: string
@@ -30,6 +31,7 @@ export interface SendEmailResult {
 export interface BulkEmailOptions {
   recipients: string[]
   from?: string
+  from_name?: string
   subject: string
   html?: string
   text?: string
@@ -62,6 +64,7 @@ export class EmailService {
   async sendEmail(options: SendEmailOptions, apiKeyId?: number): Promise<SendEmailResult> {
     const messageId = this.generateMessageId()
     const fromEmail = options.from || config.email.defaultFrom
+    const fromName = options.from_name || config.email.defaultFromName
 
     // Convert to_email to string for logging (handle arrays)
     const toEmailString = Array.isArray(options.to) ? options.to.join(', ') : options.to
@@ -99,7 +102,7 @@ export class EmailService {
         bcc?: string | string[]
         messageId: string
       } = {
-        from: `${config.email.defaultFromName} <${fromEmail}>`,
+        from: `${fromName} <${fromEmail}>`,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -171,6 +174,7 @@ export class EmailService {
         {
           to: recipient,
           from: options.from,
+          from_name: options.from_name,
           subject: options.subject,
           html: options.html,
           text: options.text,

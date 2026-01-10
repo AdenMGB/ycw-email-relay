@@ -151,6 +151,7 @@ Content-Type: application/json
 {
   "to": "user@example.com",
   "from": "noreply@ycwadelaide.adenmgb.com",
+  "from_name": "YCW Adelaide",
   "subject": "Welcome to YCW Adelaide Newsletter",
   "html": "<h1>Welcome!</h1><p>Thank you for subscribing.</p>",
   "text": "Welcome! Thank you for subscribing.",
@@ -168,6 +169,7 @@ Content-Type: application/json
 {
   "recipients": ["user1@example.com", "user2@example.com"],
   "from": "noreply@ycwadelaide.adenmgb.com",
+  "from_name": "YCW Adelaide",
   "subject": "Newsletter Update",
   "html": "<h1>Newsletter</h1><p>Content here...</p>",
   "reply_to": "contact@ycwadelaide.adenmgb.com"
