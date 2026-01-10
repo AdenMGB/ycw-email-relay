@@ -17,7 +17,7 @@ function validateEmailAddress(email: string | string[], fieldName: string): void
 }
 
 export function validateEmail(req: Request, _res: Response, next: NextFunction): void {
-  const { to, from, cc, bcc } = req.body;
+  const { to, from, cc, bcc, reply_to } = req.body;
 
   if (!to) {
     throw new ValidationError('Missing required field: "to"');
@@ -35,6 +35,10 @@ export function validateEmail(req: Request, _res: Response, next: NextFunction):
 
   if (bcc) {
     validateEmailAddress(bcc, 'bcc');
+  }
+
+  if (reply_to) {
+    validateEmailAddress(reply_to, 'reply_to');
   }
 
   next();
@@ -82,6 +86,10 @@ export function validateBulkEmail(req: Request, _res: Response, next: NextFuncti
 
   if (req.body.from && !validator.isEmail(req.body.from)) {
     throw new ValidationError('Invalid "from" email address');
+  }
+
+  if (req.body.reply_to && !validator.isEmail(req.body.reply_to)) {
+    throw new ValidationError('Invalid "reply_to" email address');
   }
 
   next();

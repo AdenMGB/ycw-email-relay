@@ -169,7 +169,8 @@ Content-Type: application/json
   "recipients": ["user1@example.com", "user2@example.com"],
   "from": "noreply@ycwadelaide.adenmgb.com",
   "subject": "Newsletter Update",
-  "html": "<h1>Newsletter</h1><p>Content here...</p>"
+  "html": "<h1>Newsletter</h1><p>Content here...</p>",
+  "reply_to": "contact@ycwadelaide.adenmgb.com"
 }
 ```
 
